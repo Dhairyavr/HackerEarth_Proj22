@@ -1,18 +1,35 @@
-
 import React, { useEffect, useState, useContext } from "react";
+import BlockchainContext from "../contexts/BlockchainContext";
 const Header = () => {
-
+  const {
+    web3,
+    accounts,
+    propNFTContract,
+    morterContract,
+    auctionContract,
+    propNFTContractAddress,
+    morterContractAddress,
+    auctionContractAddress,
+  } = useContext(BlockchainContext);
   const [currentAccount, setCurrentAccount] = useState("");
 
   useEffect(() => {
-
-
+    console.log({
+      web3,
+      accounts,
+      propNFTContract,
+      morterContract,
+      auctionContract,
+      propNFTContractAddress,
+      morterContractAddress,
+      auctionContractAddress,
+    });
     const init = async () => {
       const accountsNow = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
       setCurrentAccount(accountsNow[0]);
-    }
+    };
     init();
 
     const listener = (accs) => {
@@ -20,8 +37,6 @@ const Header = () => {
     };
 
     window.ethereum.on("accountsChanged", listener);
-
-
   }, []);
   return (
     <>
@@ -29,7 +44,7 @@ const Header = () => {
         <header
           id="sticky-header"
           className="relative bg-[#EEEEE] lg:py-[30px] z-[25] secondary-sticky"
-        // style={{ backgroundColor: "#3AB4F2" }}
+          // style={{ backgroundColor: "#3AB4F2" }}
         >
           <div className="container">
             <div className="grid grid-cols-12">
@@ -116,9 +131,6 @@ const Header = () => {
                           ) : (
                             "Connect Wallet"
                           )}
-
-
-
                         </a>
                       </li>
                       <li className="ml-2 sm:ml-5 lg:hidden">
