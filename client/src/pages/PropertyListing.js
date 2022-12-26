@@ -19,8 +19,8 @@ const PropertyListing = () => {
   } = useContext(BlockchainContext);
   let navigate = useNavigate();
   const [sportList, setSportList] = useState([]);
-
-  const [selectedCategory, setSelectedCategory] = useState();
+  const [tradingCompany, setTradingCompany] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(0);
   useEffect(() => {
     //console.log({ web3, accounts, propNFTContract, morterContract, auctionContract, propNFTContractAddress, morterContractAddress, auctionContractAddress });
     if (morterContract) fetchData();
@@ -41,6 +41,11 @@ const PropertyListing = () => {
     const totalPropertyCount = await morterContract.methods
       .propertycounter()
       .call();
+
+    const tc = await morterContract.methods
+    .tc()
+    .call();
+    setTradingCompany(tc);
     var totalPropertyCountInt = parseInt(totalPropertyCount);
     const networkId = await web3.eth.net.getId();
     var allproperties = [];
@@ -103,14 +108,38 @@ const PropertyListing = () => {
 
   function getFilteredList() {
     // Avoid filter when selectedCategory is null
-    if (!selectedCategory) {
-      return sportList;
+    if (selectedCategory===0) {
+      return sportList.filter((item) => parseInt(item.status) === 100 || parseInt(item.status)===200);
     }
-    return sportList.filter((item) => item.category === selectedCategory);
+    else if(selectedCategory===100)
+    {
+      return sportList.filter((item) => parseInt(item.status) === selectedCategory);
+    }
+    else if(selectedCategory===200)
+    {
+      return sportList.filter((item) => parseInt(item.status) === selectedCategory);
+    }
+    else if(selectedCategory===300)
+    {
+      if(accounts[0].toLowerCase()===tradingCompany.toLowerCase())
+      {
+        return sportList.filter((item) => parseInt(item.status) === selectedCategory);
+      }
+    }
+    else if(selectedCategory===400)
+    {
+      return sportList.filter((item) =>
+       
+        item.mortgager.toLowerCase() === accounts[0].toLowerCase()
+      );
+    }
+    return [];
   }
 
   // Avoid duplicate function calls with useMemo
   var filteredList = useMemo(getFilteredList, [selectedCategory, sportList]);
+
+  console.log({sportList,filteredList,selectedCategory});
 
   function handleCategoryChange(event) {
     setSelectedCategory(parseInt(event.target.value));
@@ -194,10 +223,11 @@ const PropertyListing = () => {
                     id="category-list"
                     onChange={handleCategoryChange}
                   >
-                    <option value="">All</option>
+                    <option value="0">All</option>
                     <option value="100">Properties listed for sell</option>
                     <option value="200">Mortgage Initiated NFTs</option>
-                    {/* <option value="300">300</option> */}
+                    <option value="300">Risk Free Investors Invested</option>
+                    <option value="400">View your leveraged properties</option>
                   </select>
                 </div>
               </div>

@@ -1,13 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useContext} from "react";
 import { useNavigate } from "react-router-dom";
 import InitiateMortgage from "./InitiateMortgageModal";
 import InvestMoneyModal from "./InvestMoneyModal";
 import HomeIcon from "@mui/icons-material/Home";
 import PermIdentityIcon from "@mui/icons-material/PermIdentity";
 import EnterAuctionModal from "./EnterAuctionModal";
-
+import BlockchainContext from "../contexts/BlockchainContext";
 const PropertyCard = ({ data }) => {
   console.log({ data });
+  const {
+    web3,
+    accounts,
+    propNFTContract,
+    morterContract,
+    auctionContract,
+    propNFTContractAddress,
+    morterContractAddress,
+    auctionContractAddress,
+  } = useContext(BlockchainContext);
   const [mortgageModal, setMortgageModal] = useState(false);
   const [investMoneyModal, setInvestMoneyModal] = useState(false);
   const [enterAuctionModal, setEnterAuctionModal] = useState(false);
@@ -34,6 +44,106 @@ const PropertyCard = ({ data }) => {
     getAuctionStatus();
   }, [setMortgageModal]);
   let navigate = useNavigate();
+
+  const buyDirect=async(e)=>{
+    e.preventDefault();
+    if(data.owner.toString().toLowerCase()===accounts[0].toLowerCase())
+    {
+      alert("You are already the owner");
+      return;
+    }
+    //5% of tc
+    var payToTC= parseFloat(0.05 * parseInt(data.propertyPrice));
+    var payToSeller = parseInt(data.propertyPrice);
+    var totalValuetoSend = payToSeller+payToTC;
+    try {
+      await morterContract.methods.direct_buy_property(data.nftId,payToSeller,payToTC).send({
+      from:accounts[0],
+      value:totalValuetoSend.toString()
+    });
+    alert("Property purchased successfully");
+    window.location.reload();
+    } catch (error) {
+      alert(error.message);
+      console.log(JSON.stringify(error));
+      return
+    }
+
+  }
+
+  const tradeByTradingCompany=async(e)=>{
+    e.preventDefault();
+    try {
+      await morterContract.methods.trade(parseInt(data.nftId)).send({
+      from:accounts[0],
+      value: data.mortgageamt.toString()
+    });
+    alert("Trade Done successfully");
+    window.location.reload();
+    } catch (error) {
+      alert(error.message);
+      return
+    }
+  }
+
+  function timeConverter(UNIX_timestamp){ var a = new Date(UNIX_timestamp * 1000); var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var year = a.getFullYear(); var month = months[a.getMonth()]; var date = a.getDate(); var hour = a.getHours(); var min = a.getMinutes(); var sec = a.getSeconds(); var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ; 
+return time; }
+
+
+  const payEmi=async(e)=>{
+    e.preventDefault();
+   // uint256 property_id, uint256 penaltyAmount
+   let lastEMITimestamp = data.lastEMItimestamp;
+   let firstEmiDone = data.firstEmiDone;
+   let emi_to_be_paid = data.emi_to_be_paid;
+   var totalAmountToBePaid;
+   var penaltyAmount=0;
+   console.log({lastEMITimestamp,firstEmiDone});
+   if(firstEmiDone)
+   {
+      var currdate = new Date();
+      var lastEMIDate = new Date(timeConverter(parseInt(lastEMITimestamp)));
+      const diffTime = Math.abs(currdate - lastEMIDate);
+      const diffDays = diffTime / (1000 * 60 * 60 * 24); 
+      console.log(diffTime + " milliseconds");
+      console.log(diffDays + " days");
+      if(diffDays>30)
+      {
+        var penalty = 0.05*emi_to_be_paid;
+        totalAmountToBePaid = emi_to_be_paid + emi_to_be_paid + penalty;
+        penaltyAmount = totalAmountToBePaid;
+      }
+      else
+      {
+        totalAmountToBePaid = emi_to_be_paid;
+        penaltyAmount=0;
+      }
+
+      console.log(totalAmountToBePaid);
+   }
+   else
+   {
+    totalAmountToBePaid = emi_to_be_paid;
+    penaltyAmount=0;
+   }
+  
+    try {
+      
+      await morterContract.methods.payEmi(parseInt(data.nftId),penaltyAmount).send({
+      from:accounts[0],
+      value: totalAmountToBePaid
+    });
+    alert("EMI Paid Successfully");
+    window.location.reload();
+    
+    } catch (error) {
+      alert(error.message);
+      return
+    }
+  }
+
+    
+  
 
   // const { landtype, category, image } = data;
   return (
@@ -84,12 +194,15 @@ const PropertyCard = ({ data }) => {
               <InitiateMortgage
                 open={mortgageModal}
                 setOpen={handleClickOpenMortgageModal}
+                data={data}
               />
             )}
             {investMoneyModal && (
               <InvestMoneyModal
                 open={investMoneyModal}
                 setOpen={handleClickOpenInvestMoneyModal}
+                data={data}
+
               />
             )}
             {enterAuctionModal && (
@@ -103,9 +216,11 @@ const PropertyCard = ({ data }) => {
               <button onClick={handleClickOpenAuctionModal} className="before:rounded-md before:block before:absolute before:left-auto before:right-0 before:inset-y-0 before:-z-[1] before:bg-secondary before:w-0 hover:before:w-full hover:before:left-0 hover:before:right-auto before:transition-all leading-none px-[20px] py-[15px] capitalize font-medium text-white hidden sm:block  relative after:block after:absolute after:inset-0 after:-z-[2] after:bg-primary after:rounded-md after:transition-all">
                 Enter the Auction
               </button>
-            ) : data.category === 100 ? (
+            ) : parseInt(data.status) === 100 ? (
               <div style={{ textAlign: "center" }}>
                 <button
+
+                  onClick={buyDirect}
                   style={{
                     display: "inline-block",
                     marginRight: "1rem",
@@ -122,18 +237,21 @@ const PropertyCard = ({ data }) => {
                   Initiate Mortgage
                 </button>
               </div>
-            ) : data.category === 200 ? (
+            ) : parseInt(data.status) === 200 ? (
               <button
                 onClick={handleClickOpenInvestMoneyModal}
                 className="before:rounded-md before:block before:absolute before:left-auto before:right-0 before:inset-y-0 before:-z-[1] before:bg-secondary before:w-0 hover:before:w-full hover:before:left-0 hover:before:right-auto before:transition-all leading-none px-[20px] py-[15px] capitalize font-medium text-white hidden sm:block  relative after:block after:absolute after:inset-0 after:-z-[2] after:bg-primary after:rounded-md after:transition-all"
               >
                 Invest Risk Free
               </button>
-            ) : data.category === 300 ? (
-              <button className="before:rounded-md before:block before:absolute before:left-auto before:right-0 before:inset-y-0 before:-z-[1] before:bg-secondary before:w-0 hover:before:w-full hover:before:left-0 hover:before:right-auto before:transition-all leading-none px-[20px] py-[15px] capitalize font-medium text-white hidden sm:block  relative after:block after:absolute after:inset-0 after:-z-[2] after:bg-primary after:rounded-md after:transition-all">
+            ) : parseInt(data.status) === 300 ? (
+              <button onClick={tradeByTradingCompany} className="before:rounded-md before:block before:absolute before:left-auto before:right-0 before:inset-y-0 before:-z-[1] before:bg-secondary before:w-0 hover:before:w-full hover:before:left-0 hover:before:right-auto before:transition-all leading-none px-[20px] py-[15px] capitalize font-medium text-white hidden sm:block  relative after:block after:absolute after:inset-0 after:-z-[2] after:bg-primary after:rounded-md after:transition-all">
                 Initiate Final Trade
               </button>
-            ) : null}
+            ) : parseInt(data.status) === 400 ? (
+              <button onClick={payEmi} className="before:rounded-md before:block before:absolute before:left-auto before:right-0 before:inset-y-0 before:-z-[1] before:bg-secondary before:w-0 hover:before:w-full hover:before:left-0 hover:before:right-auto before:transition-all leading-none px-[20px] py-[15px] capitalize font-medium text-white hidden sm:block  relative after:block after:absolute after:inset-0 after:-z-[2] after:bg-primary after:rounded-md after:transition-all">
+                Pay EMI
+              </button>):null}
             <br />
             <span style={{ fontSize: "18px", fontWeight: "500" }}>
               Created on: 4 December, 2022
