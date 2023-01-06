@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Route, Routes } from "react-router-dom";
+import { HashRouter,Switch,Route,Routes, BrowserRouter} from 'react-router-dom';
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import Dashboard from "./pages/Dashboard";
@@ -13,8 +13,9 @@ import propNFT from "./abis/propNFT.json";
 import morter from "./abis/morter.json";
 import auction from "./abis/Auction.json";
 import BlockchainContext from "./contexts/BlockchainContext";
-import { DecentralizedStoragePlayback } from "./components/DecentralizedStoragePlayback";
-import {Livepeer} from "./components/livepeer";
+import { Livepeer } from "./components/livepeer";
+require("dotenv").config();
+
 const getWeb3 = async () => {
   let tempWeb3 = undefined;
   if (window.ethereum) {
@@ -29,7 +30,6 @@ const getWeb3 = async () => {
       //const accounts = await window.web3.eth.getAccounts();
     } catch (error) {
       // User denied account access...
-
     }
   }
   // Legacy dapp browsers...
@@ -102,7 +102,7 @@ const App = () => {
       }
 
       //Importing the auction Contract
-      var networkdata = auction.networks[networkId];
+      networkdata = auction.networks[networkId];
       console.log("auction=", networkdata);
       if (networkdata) {
         const abi = auction.abi;
@@ -138,19 +138,15 @@ const App = () => {
         }}
       >
         <Header />
-        <Routes>
-          <Route exact path="/" element={<HomePage />} />
-          <Route exact path="/listings" element={<PropertyListing />} />
-          <Route exact path="/add-property" element={<ListProperty />} />
-          <Route exact path="/property-details" element={<PropertyDetails />} />
-          <Route exact path="/dashboard" element={<Dashboard />} />
-          <Route exact path="/video" element={<Livepeer/>} />
-          <Route
-            exact
-            path="/PropertyMarketplace"
-            element={<PropertyMarketplace />}
-          />
-        </Routes>
+          <Routes>
+          <Route path="/" exact element={<HomePage />} />
+          <Route path="/listings" exact element={<PropertyListing />} />
+          <Route path="/add-property" exact element={<ListProperty />} />
+          <Route path="/property-details" exact element={<PropertyDetails />} />
+          <Route path="/dashboard" exact element={<Dashboard />} />
+          <Route path="/video" exact element={<Livepeer />} />
+          <Route path="/PropertyMarketplace" exact element={<PropertyMarketplace />}/>
+          </Routes>
       </BlockchainContext.Provider>
       <Footer />
     </div>

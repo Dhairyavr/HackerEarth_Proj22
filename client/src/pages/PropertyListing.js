@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
+
 import PropertyCard from "../components/PropertyCard";
 import { useNavigate } from "react-router-dom";
 // import { propertyCollection } from "./propertyMetaData";
 import BlockchainContext from "../contexts/BlockchainContext";
-import dotenv from "dotenv";
 import axios from "axios";
-dotenv.config();
+require("dotenv").config();
+
 const PropertyListing = () => {
   const {
     web3,
@@ -21,89 +23,67 @@ const PropertyListing = () => {
   const [sportList, setSportList] = useState([]);
   const [tradingCompany, setTradingCompany] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(0);
+  const [loading, setLoading] = useState(false);
+  // const [totalPropertyCount, setTotalPropertyCount] = useState(9999);
   useEffect(() => {
-    //console.log({ web3, accounts, propNFTContract, morterContract, auctionContract, propNFTContractAddress, morterContractAddress, auctionContractAddress });
-    if (morterContract) fetchData();
+    if (!morterContract) return;
+    fetchData();
+  }, [morterContract]);
 
-    // get all data from covalent about all NFTs
-
-    //var allproperties=[];
-  }, [accounts]);
-
-  useEffect(() => {
-    //setSportList(propertyCollection);
-  }, [sportList]);
+  useEffect(() => {}, [sportList]);
 
   // console.log({ web3, accounts, propNFTContract, morterContract, auctionContract, propNFTContractAddress, morterContractAddress, auctionContractAddress });
 
   const fetchData = async () => {
-    console.log({ morterContract });
-    console.log({morterContractAddress});
-    
-    const totalPropertyCount = await morterContract.methods
+    setLoading(true);
+    let allproperties = [];
+    // console.log({ morterContract });
+    // console.log({ morterContractAddress });
+    const ALCHEMY_KEY = process.env.REACT_APP_ALCHEMY_API_KEY;
+
+    // setTotalPropertyCount(
+    //   await morterContract.methods.propertycounter().call()
+    // );
+    let totalPropertyCount = await morterContract.methods
       .propertycounter()
       .call();
 
+    console.log(totalPropertyCount);
     const tc = await morterContract.methods.tc().call();
     setTradingCompany(tc);
-    var totalPropertyCountInt = parseInt(totalPropertyCount);
-    const networkId = await web3.eth.net.getId();
-    var allproperties = [];
-    var myHeaders = new Headers();
-    //console.log(process.env.REACT_APP_COVALENT_API_KEY);
-    const COVALENT_KEY = process.env.REACT_APP_COVALENT_API_KEY;
-    console.log({ COVALENT_KEY });
-    var authenticationHeader = authenticateUser(COVALENT_KEY, "");
-    console.log({ authenticationHeader });
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", authenticationHeader);
-
-    var requestOptions = {
-      method: "GET",
-      headers: myHeaders,
-      redirect: "follow",
-    };
-
-    for (var i = 0; i < totalPropertyCount; i++) {
+    for (let i = 0; i < totalPropertyCount; i++) {
+      console.log("counter", i, loading);
       var result;
-      var res;
       try {
-        result = await fetch(
-          `https://api.covalenthq.com/v1/${networkId}/tokens/${propNFTContractAddress}/nft_metadata/${i}/`,
-          requestOptions
-        ).then((response) => response.text());
-        var resultJSON = await JSON.parse(result);
-        console.log({ resultJSON });
-        var metadataURI = resultJSON.data.items[0].nft_data[0].token_url;
-        console.log({ metadataURI });
-        var ipfsLocation = metadataURI.replace(
-          "ipfs://",
-          "https://ipfs.io/ipfs/"
+        result = await axios.get(
+          `https://polygon-mumbai.g.alchemy.com/nft/v2/${ALCHEMY_KEY}/getNFTMetadata?contractAddress=${propNFTContractAddress}&tokenId=${i}&tokenType=ERC721`
         );
-        var currProperty = await axios.get(ipfsLocation);
-        var currentPropertyData = currProperty.data;
+        // console.log(result);
+        var currentPropertyData = result.data.metadata;
 
         //get property data from morter contract
         var propertyData = await morterContract.methods.allproperties(i).call();
         var auctionData = await auctionContract.methods.allAuctions(i).call();
-        console.log({ propertyData });
-        console.log({ auctionData });
-        console.log({ currentPropertyData });
-        currentPropertyData["nftContract"] = propNFTContractAddress;
-        currentPropertyData["nftId"] = i;
-        let finalPropertyData = Object.assign(
+        console.log(propertyData);
+        // console.log(auctionData);
+        console.log(currentPropertyData);
+        currentPropertyData.nftContract = propNFTContractAddress;
+        currentPropertyData.nftId = i;
+        let finalPropertyData = await Object.assign(
           propertyData,
           auctionData,
           currentPropertyData
         );
+        console.log(finalPropertyData);
+
         allproperties.push(finalPropertyData);
       } catch (error) {
-        console.log("error", error);
+        alert(error.message);
+        return;
       }
     }
     setSportList(allproperties);
-    console.log({ allproperties });
-    console.log(JSON.stringify(allproperties));
+    setLoading(false);
   };
 
   function getFilteredList() {
@@ -130,12 +110,8 @@ const PropertyListing = () => {
       return sportList.filter(
         (item) => item.mortgager.toLowerCase() === accounts[0].toLowerCase()
       );
-    }
-    else if(selectedCategory===500)
-    {
-      return sportList.filter(
-        (item) => item.auctionStarted === true
-      );
+    } else if (selectedCategory === 500) {
+      return sportList.filter((item) => item.auctionStarted === true);
     }
     return [];
   }
@@ -143,67 +119,80 @@ const PropertyListing = () => {
   // Avoid duplicate function calls with useMemo
   var filteredList = useMemo(getFilteredList, [selectedCategory, sportList]);
 
-  console.log({ sportList, filteredList, selectedCategory });
+  console.log(sportList, filteredList, selectedCategory);
 
   function handleCategoryChange(event) {
     setSelectedCategory(parseInt(event.target.value));
   }
 
-  function authenticateUser(user, password) {
-    var token = user + ":" + password;
-    // Base64 Encoding -> btoa
-    var hash = btoa(token);
-
-    return "Basic " + hash;
-  }
-
-  const getRandomInt=(min, max)=> {
+  const getRandomInt = (min, max) => {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+  };
 
-  const checkDropStatus=async(droppedProperties)=>{
-    var filterDroppedProperties=new Array();
-    for(var tokenId in droppedProperties)
-    {
-      var dropstatus = await morterContract.methods.dropStatus(tokenId).call();
-      console.log({dropstatus});
-      if(dropstatus===false)
-      {
-        filterDroppedProperties.push(tokenId);
-      }
-    }
-    return filterDroppedProperties;
-  }
-  const claimYourDrop=async()=> 
-  {
+  // const checkDropStatus = async (droppedProperties) => {
+  //   var filterDroppedProperties = [];
+  //   for (var tokenId in droppedProperties) {
+  //     var dropstatus = await morterContract.methods.dropStatus(tokenId).call();
+  //     console.log({ dropstatus });
+  //     if (dropstatus === false) {
+  //       filterDroppedProperties.push(tokenId);
+  //     }
+  //   }
+  //   return filterDroppedProperties;
+  // };
+  const claimYourDrop = async (e) => {
     //droppedProperties = [2,5,7,8,9]
     //filterDroppedProperties = [5,7,8]
     //random from 0 to 2
+    e.preventDefault();
+    let droppedProperties;
+    let prevDropClaimStatus;
     try {
-      var droppedProperties=await morterContract.methods.getAllDroppedProperties().call();
-      await console.log({droppedProperties});
-      var filterDroppedProperties = await checkDropStatus(droppedProperties);
-      await console.log({filterDroppedProperties});
-      if(filterDroppedProperties.length>0)
-      {
-      var randomNumber = getRandomInt(0,filterDroppedProperties.length-1);
-      console.log({randomNumber});
-      await morterContract.methods.getDropProperty(filterDroppedProperties[randomNumber]).send({
-        from: accounts[0]
-      }).then((res)=>{
-        alert(`Token drop ${filterDroppedProperties[randomNumber]} allocated to you.`);
-      });
+      prevDropClaimStatus = await morterContract.getPastEvents(
+        "dropCollected",
+        {
+          filter: { owner: accounts[0] },
+        }
+      );
+
+      droppedProperties = await morterContract.methods
+        .getAllDroppedProperties()
+        .call();
+    } catch (e) {
+      console.log(e);
     }
-    else
-    {
+    console.log(droppedProperties, prevDropClaimStatus);
+    // var filterDroppedProperties = await checkDropStatus(droppedProperties);
+    let filterDroppedProperties = droppedProperties.filter(
+      async (data) =>
+        (await morterContract.methods.dropStatus(data).call()) === false
+    );
+    let currentDate = new Date();
+    console.log(filterDroppedProperties, currentDate.toDateString());
+    if (filterDroppedProperties.length > 0) {
+      var randomNumber = getRandomInt(0, filterDroppedProperties.length - 1);
+      console.log(randomNumber);
+      try {
+        await morterContract.methods
+          .getDropProperty(
+            parseInt(filterDroppedProperties[randomNumber]),
+            currentDate.toDateString()
+          )
+          .send({
+            from: accounts[0],
+          });
+        alert(
+          `Token drop ${filterDroppedProperties[randomNumber]} allocated to you.`
+        );
+      } catch (e) {
+        alert(e.message);
+      }
+    } else {
       alert("No NFT drops left");
     }
-    } catch (e) {
-      console.log(JSON.stringify(e));
-    }
-  }
+  };
 
   return (
     <div>
@@ -236,15 +225,24 @@ const PropertyListing = () => {
                       Huge number of propreties availabe here for buy and sell
                       also you can find here co-living property as you like
                     </p>
+                    {accounts.length > 0 ? (
+                      process.env.REACT_APP_TRADING_COMPANY_1.toLowerCase() ===
+                        accounts[0].toLowerCase() ||
+                      process.env.REACT_APP_TRADING_COMPANY_2.toLowerCase() ===
+                        accounts[0].toLowerCase() ? (
+                        <>
+                          <button
+                            style={{ marginTop: "1rem", marginLeft: "15rem" }}
+                            className="before:rounded-md before:block before:absolute before:left-auto before:right-0 before:inset-y-0 before:-z-[1] before:bg-secondary before:w-0 hover:before:w-full hover:before:left-0 hover:before:right-auto before:transition-all leading-none px-[20px] py-[15px] capitalize font-medium text-white hidden sm:block text-[14px] xl:text-[16px] relative after:block after:absolute after:inset-0 after:-z-[2] after:bg-primary after:rounded-md after:transition-all"
+                            onClick={() => navigate("/add-property")}
+                          >
+                            Add Property
+                          </button>
+                        </>
+                      ) : null
+                    ) : null}
                     <button
-                      style={{ marginTop: "1rem", marginLeft: "15rem" }}
-                      className="before:rounded-md before:block before:absolute before:left-auto before:right-0 before:inset-y-0 before:-z-[1] before:bg-secondary before:w-0 hover:before:w-full hover:before:left-0 hover:before:right-auto before:transition-all leading-none px-[20px] py-[15px] capitalize font-medium text-white hidden sm:block text-[14px] xl:text-[16px] relative after:block after:absolute after:inset-0 after:-z-[2] after:bg-primary after:rounded-md after:transition-all"
-                      onClick={() => navigate("/add-property")}
-                    >
-                      Add Property
-                    </button>
-                    <button
-                      style={{ marginTop: "1rem", marginLeft: "15rem" }}
+                      style={{ marginTop: "1rem", marginLeft: "14rem" }}
                       className="before:rounded-md before:block before:absolute before:left-auto before:right-0 before:inset-y-0 before:-z-[1] before:bg-secondary before:w-0 hover:before:w-full hover:before:left-0 hover:before:right-auto before:transition-all leading-none px-[20px] py-[15px] capitalize font-medium text-white hidden sm:block text-[14px] xl:text-[16px] relative after:block after:absolute after:inset-0 after:-z-[2] after:bg-primary after:rounded-md after:transition-all"
                       onClick={claimYourDrop}
                     >
@@ -255,9 +253,7 @@ const PropertyListing = () => {
               </div>
             </div>
           </section>
-          {/* <!-- Hero section end -->
 
-        <!-- Popular Properties start --> */}
           <section className="popular-properties py-[80px] lg:py-[120px]">
             <div className="container">
               <div className="filter-container">
@@ -293,16 +289,35 @@ const PropertyListing = () => {
               </div>
               <br />
               <br />
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[30px]">
-                {filteredList.map((element, index) => (
-                  <PropertyCard data={element} key={index} />
-                ))}{" "}
-              </div>
+              {loading === false ? (
+                <>
+                  {filteredList.length > 0 ? (
+                    <>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[30px]">
+                        {filteredList.map((element, index) => (
+                          <PropertyCard data={element} key={index} />
+                        ))}{" "}
+                      </div>
+                    </>
+                  ) : (
+                    <h1
+                      style={{
+                        fontWeight: "700",
+                        fontFamily: "Georgia",
+                        fontSize: "52px",
+                        color: "red",
+                        textAlign: "center",
+                      }}
+                    >
+                      No Properties up for sell :(
+                    </h1>
+                  )}
+                </>
+              ) : (
+                <CircularProgress size={70} />
+              )}
             </div>
           </section>
-          {/* <!-- Popular Properties end -->
-
-        <!-- News Letter section start --> */}
           <section className="py-[80px] lg:p-[90px] bg-primary relative">
             <div className="container">
               <div className="grid grid-cols-1">
@@ -354,6 +369,7 @@ const PropertyListing = () => {
               </div>
             </div>
           </section>
+
           {/* <!-- News Letter section End -->
 
         <!-- Footer Start --> */}
