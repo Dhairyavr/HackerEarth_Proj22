@@ -110,19 +110,23 @@ const PropertyDetails = () => {
                     );
                   })}
                 </ul>
-                <h5
-                  style={{ color: "#083AA9" }}
-                  className="font-lora text-primary text-[24px] sm:text-[28px] leading-[1.277] capitalize lg:mt-[25px] mb-[40px] font-medium"
-                >
-                  Video Sample<span className="text-secondary">.</span>
-                </h5>
-                <Button
-                  onClick={() =>
-                    navigate("/video", { state: { videoURL: data.video } })
-                  }
-                >
-                  Check Video
-                </Button>
+                {data.video.length > 0 ? (
+                  <>
+                    <h5
+                      style={{ color: "#083AA9" }}
+                      className="font-lora text-primary text-[24px] sm:text-[28px] leading-[1.277] capitalize lg:mt-[25px] mb-[40px] font-medium"
+                    >
+                      Video Sample<span className="text-secondary">.</span>
+                    </h5>
+                    <Button
+                      onClick={() =>
+                        navigate("/video", { state: { videoURL: data.video } })
+                      }
+                    >
+                      Check Video
+                    </Button>
+                  </>
+                ) : null}
                 <div className="grid grid-cols-12 mt-[10px]">
                   <div className="col-span-12">
                     <h2

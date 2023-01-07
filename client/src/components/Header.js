@@ -61,7 +61,7 @@ const Header = () => {
                       fontWeight: "700",
                     }}
                   >
-                    MetaEstate
+                    MetaBroker
                   </a>
                   <nav
                     className="flex flex-wrap items-center"

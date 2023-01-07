@@ -127,7 +127,7 @@ export default function InitiateMortgage({ open, setOpen, data }) {
           <input
             className="font-light w-full leading-[1.75] placeholder:opacity-100 placeholder:text-body border border-primary border-opacity-60 rounded-[8px] pl-[40px] pr-[20px] py-[8px] focus:border-secondary focus:border-opacity-60 focus:outline-none focus:drop-shadow-[0px_6px_15px_rgba(0,0,0,0.1)] bg-white"
             type="text"
-            placeholder="The leverage Amount in Ethers"
+            placeholder="The leverage Amount in MATIC"
             value={amount}
             disabled={false}
             style={{ color: "black" }}

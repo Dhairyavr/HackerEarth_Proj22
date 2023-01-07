@@ -319,7 +319,7 @@ const PropertyCard = ({ data }) => {
                 className="flex flex-wrap items-center pr-[25px] sm:pr-[5px] md:pr-[25px] border-r border-[#E0DEDE]"
               >
                 <PermIdentityIcon />
-                {data.creator.length > 0 ? (
+                {data.creator ? (
                   <>
                     {data.creator.toString()[0]}
                     {data.creator.toString()[1]}
@@ -338,7 +338,7 @@ const PropertyCard = ({ data }) => {
                 className="flex flex-wrap items-center pr-[25px] sm:pr-[10px] md:pr-[25px] border-r border-[#E0DEDE]"
               >
                 <HomeIcon />
-                {data.nftContract.length > 0 ? (
+                {data.nftContract ? (
                   <>
                     {data.nftContract.toString()[0]}
                     {data.nftContract.toString()[1]}
