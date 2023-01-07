@@ -85,8 +85,8 @@ export default function InvestMoneyModal({ open, setOpen, data }) {
     }
     try {
       await morterContract.methods
-        .riskfreeinvest(parseInt(data.nftId), parseInt(finalAmount))
-        .send({ from: accounts[0], value: parseInt(finalAmount) });
+        .riskfreeinvest(parseInt(data.nftId), finalAmount.toString())
+        .send({ from: accounts[0], value: finalAmount.toString() });
       alert("Your investment has been made successfully");
       window.location.reload();
     } catch (e) {

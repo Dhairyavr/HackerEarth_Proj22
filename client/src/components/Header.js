@@ -34,6 +34,7 @@ const Header = () => {
 
     const listener = (accs) => {
       setCurrentAccount(accs[0]);
+      window.location.reload();
     };
 
     window.ethereum.on("accountsChanged", listener);

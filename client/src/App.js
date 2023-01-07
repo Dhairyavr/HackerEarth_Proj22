@@ -74,6 +74,7 @@ const App = () => {
 
       const listener = (accs) => {
         setAccounts(accs);
+        window.location.reload();
       };
 
       let _propNFTContract;

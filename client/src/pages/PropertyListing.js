@@ -137,14 +137,18 @@ const PropertyListing = () => {
 
   const checkDropStatus = async (droppedProperties) => {
     let filterDroppedProperties = [];
-    for (let tokenId in droppedProperties) {
-      let dropstatus = await morterContract.methods.dropStatus(tokenId).call();
+    for (let i = 0; i < droppedProperties.length; i++) {
+      // console.log(droppedProperties[i]);
+      let dropstatus = await morterContract.methods
+        .dropStatus(droppedProperties[i])
+        .call();
       if (dropstatus === false) {
-        filterDroppedProperties.push(tokenId);
+        filterDroppedProperties.push(droppedProperties[i]);
       }
     }
     return filterDroppedProperties;
   };
+
   const claimYourDrop = async (e) => {
     //droppedProperties = [2,5,7,8,9]
     //filterDroppedProperties = [5,7,8]
@@ -155,14 +159,21 @@ const PropertyListing = () => {
     let droppedProperties;
     let prevDropClaimStatus;
     try {
-      prevDropClaimStatus = await morterContract.getPastEvents(
-        "dropCollected",
-        {
-          filter: { owner: accounts[0] },
-        }
-      );
-      let prevClaimDate = new Date();
-      prevClaimDate.setDate(prevClaimDate.getDate() - 5);
+      prevDropClaimStatus = await morterContract.getPastEvents('dropCollected', {
+        filter: { owner: accounts[0] },
+        fromBlock: 0,
+        toBlock: 'latest'
+    });
+
+      // prevDropClaimStatus = await morterContract.getPastEvents(
+      //   "dropCollected",
+      //   {
+      //     filter: { owner: accounts[0] },
+      //   }
+      // );
+      let prevClaimDate = new Date(prevDropClaimStatus[prevDropClaimStatus.length-1].returnValues.time);
+
+      //prevClaimDate.setDate(prevClaimDate.getDate() - 5);
       let dayDiff = Math.round(
         (curentDate.getTime() - prevClaimDate.getTime()) / timeDivision
       );
@@ -177,6 +188,7 @@ const PropertyListing = () => {
         .getAllDroppedProperties()
         .call();
     } catch (e) {
+      alert(e.message);
       console.log(e);
     }
     if (!droppedProperties) {
@@ -330,7 +342,7 @@ const PropertyListing = () => {
                         textAlign: "center",
                       }}
                     >
-                      No Properties up for sell :(
+                      No Properties here
                     </h1>
                   )}
                 </>

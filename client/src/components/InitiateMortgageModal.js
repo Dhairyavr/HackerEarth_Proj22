@@ -83,17 +83,17 @@ export default function InitiateMortgage({ open, setOpen, data }) {
 
     var mortgage_amt = parseFloat(amount) * Math.pow(10, 18);
     var emi = emiAmount * Math.pow(10, 18);
-    var downPayment = parseFloat(data.propertyPrice).toFixed(2) - mortgage_amt;
+    var downPayment = parseFloat(data.price).toFixed(2) - mortgage_amt;
     console.log(emi, numerator, denominator, mortgage_amt, emi, downPayment);
     try {
       await morterContract.methods
         .initiate_mortgage(
           data.nftId,
-          mortgage_amt,
-          parseInt(emi),
+          mortgage_amt.toString(),
+          emi.toString(),
           parseInt(months)
         )
-        .send({ from: accounts[0], value: parseInt(downPayment) });
+        .send({ from: accounts[0], value: downPayment.toString() });
       alert("Mortgage initiated successfully");
       window.location.reload();
     } catch (e) {

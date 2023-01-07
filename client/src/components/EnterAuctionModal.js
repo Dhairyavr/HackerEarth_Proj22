@@ -140,16 +140,42 @@ export default function EnterAuctionModal({ open, setOpen, data }) {
     //   .then((response) => console.log(response))
     //   .catch((err) => console.error(err));
     // let blockNumber = (await web3.eth.getBlockNumber()) - 999;
-    let response = await auctionContract.getPastEvents(
-      "Bid",
-      {},
-      function (err, events) {
-        console.log(events);
-      }
-    );
 
-    console.log(response);
-    if (response.length > 0) setAllBids(response);
+    auctionContract.getPastEvents('Bid', {
+      filter:{nftId:data.nftId},
+      fromBlock: 0,
+      toBlock: 'latest'
+  }, function(error, events){ 
+    if(error)
+    console.log(error);
+    console.log(events); })
+  .then(function(events){
+    if (events.length > 0) {
+      let tempBids=[];
+      events.forEach((data) => {
+        console.log(data);
+        let val = {
+          bidderAddress: data.returnValues.bidder,
+          bidAmount: parseFloat(parseInt(data.returnValues.amount)/Math.pow(10,18)).toString(),
+        };
+        tempBids.push(val);
+        
+      });
+      setAllBids(tempBids);
+    }
+     // same results as the optional callback above
+  });
+  
+    // let response = await auctionContract.getPastEvents(
+    //   "Bid",
+    //   {},
+    //   function (err, events) {
+    //     console.log(events);
+    //   }
+    // );
+
+   // console.log(response);
+   // if (response.length > 0) setAllBids(response);
   };
 
   useEffect(() => {
