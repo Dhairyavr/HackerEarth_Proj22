@@ -9,16 +9,18 @@ import axios from "axios";
 require("dotenv").config();
 
 const PropertyListing = () => {
-  const {
-    web3,
-    accounts,
-    propNFTContract,
-    morterContract,
-    auctionContract,
-    propNFTContractAddress,
-    morterContractAddress,
-    auctionContractAddress,
-  } = useContext(BlockchainContext);
+  const { accounts, morterContract, auctionContract, propNFTContractAddress } =
+    useContext(BlockchainContext);
+  // const {
+  //   web3,
+  //   accounts,
+  //   propNFTContract,
+  //   morterContract,
+  //   auctionContract,
+  //   propNFTContractAddress,
+  //   morterContractAddress,
+  //   auctionContractAddress,
+  // } = useContext(BlockchainContext);
   let navigate = useNavigate();
   const [sportList, setSportList] = useState([]);
   const [tradingCompany, setTradingCompany] = useState("");
@@ -28,6 +30,7 @@ const PropertyListing = () => {
   useEffect(() => {
     if (!morterContract) return;
     fetchData();
+    // eslint-disable-next-line
   }, [morterContract]);
 
   useEffect(() => {}, [sportList]);
@@ -117,6 +120,7 @@ const PropertyListing = () => {
   }
 
   // Avoid duplicate function calls with useMemo
+  // eslint-disable-next-line
   var filteredList = useMemo(getFilteredList, [selectedCategory, sportList]);
 
   console.log(sportList, filteredList, selectedCategory);
@@ -131,22 +135,23 @@ const PropertyListing = () => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
-  // const checkDropStatus = async (droppedProperties) => {
-  //   var filterDroppedProperties = [];
-  //   for (var tokenId in droppedProperties) {
-  //     var dropstatus = await morterContract.methods.dropStatus(tokenId).call();
-  //     console.log({ dropstatus });
-  //     if (dropstatus === false) {
-  //       filterDroppedProperties.push(tokenId);
-  //     }
-  //   }
-  //   return filterDroppedProperties;
-  // };
+  const checkDropStatus = async (droppedProperties) => {
+    let filterDroppedProperties = [];
+    for (let tokenId in droppedProperties) {
+      let dropstatus = await morterContract.methods.dropStatus(tokenId).call();
+      if (dropstatus === false) {
+        filterDroppedProperties.push(tokenId);
+      }
+    }
+    return filterDroppedProperties;
+  };
   const claimYourDrop = async (e) => {
     //droppedProperties = [2,5,7,8,9]
     //filterDroppedProperties = [5,7,8]
     //random from 0 to 2
     e.preventDefault();
+    let curentDate = new Date();
+    let timeDivision = 1000 * 60 * 60 * 24;
     let droppedProperties;
     let prevDropClaimStatus;
     try {
@@ -156,19 +161,35 @@ const PropertyListing = () => {
           filter: { owner: accounts[0] },
         }
       );
-
+      let prevClaimDate = new Date();
+      prevClaimDate.setDate(prevClaimDate.getDate() - 5);
+      let dayDiff = Math.round(
+        (curentDate.getTime() - prevClaimDate.getTime()) / timeDivision
+      );
+      if (dayDiff <= 0) {
+        console.log(dayDiff);
+        alert(
+          `Only one drop property can be claimed in a day ${prevClaimDate}`
+        );
+        return;
+      }
       droppedProperties = await morterContract.methods
         .getAllDroppedProperties()
         .call();
     } catch (e) {
       console.log(e);
     }
+    if (!droppedProperties) {
+      alert("No NFT drops available");
+      return;
+    }
     console.log(droppedProperties, prevDropClaimStatus);
-    // var filterDroppedProperties = await checkDropStatus(droppedProperties);
-    let filterDroppedProperties = droppedProperties.filter(
-      async (data) =>
-        (await morterContract.methods.dropStatus(data).call()) === false
-    );
+    var filterDroppedProperties = await checkDropStatus(droppedProperties);
+    // let filterDroppedProperties = droppedProperties.filter(
+    //   async (data) =>
+    //     (await morterContract.methods.dropStatus(parseInt(data)).call()) ===
+    //     false
+    // );
     let currentDate = new Date();
     console.log(filterDroppedProperties, currentDate.toDateString());
     if (filterDroppedProperties.length > 0) {

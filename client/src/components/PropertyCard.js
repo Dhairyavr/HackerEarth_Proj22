@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import InitiateMortgage from "./InitiateMortgageModal";
 import InvestMoneyModal from "./InvestMoneyModal";
@@ -9,20 +9,30 @@ import BlockchainContext from "../contexts/BlockchainContext";
 const PropertyCard = ({ data }) => {
   console.log({ data });
   const {
-    web3,
+    // web3,
     accounts,
-    propNFTContract,
+    // propNFTContract,
     morterContract,
-    auctionContract,
-    propNFTContractAddress,
-    morterContractAddress,
-    auctionContractAddress,
+    // auctionContract,
+    // propNFTContractAddress,
+    // morterContractAddress,
+    // auctionContractAddress,
   } = useContext(BlockchainContext);
+  // const {
+  //   web3,
+  //   accounts,
+  //   propNFTContract,
+  //   morterContract,
+  //   auctionContract,
+  //   propNFTContractAddress,
+  //   morterContractAddress,
+  //   auctionContractAddress,
+  // } = useContext(BlockchainContext);
   const [mortgageModal, setMortgageModal] = useState(false);
   const [investMoneyModal, setInvestMoneyModal] = useState(false);
   const [enterAuctionModal, setEnterAuctionModal] = useState(false);
 
-  const [auctionStatus, setAuctionStatus] = useState(true);
+  // const [auctionStatus, setAuctionStatus] = useState(true);
 
   const handleClickOpenMortgageModal = () => {
     setMortgageModal(!mortgageModal);
@@ -34,15 +44,15 @@ const PropertyCard = ({ data }) => {
   const handleClickOpenAuctionModal = () => {
     setEnterAuctionModal(!enterAuctionModal);
   };
-  const getAuctionStatus = () => {
-    //call to the Auction contract allAuctions function
-    let aucStatus;
-    //setAuctionStatus(auctionStatus)
-  };
+  // const getAuctionStatus = () => {
+  //   //call to the Auction contract allAuctions function
+  //   let aucStatus;
+  //   //setAuctionStatus(auctionStatus)
+  // };
 
-  useEffect(() => {
-    getAuctionStatus();
-  }, [setMortgageModal]);
+  // useEffect(() => {
+  //   getAuctionStatus();
+  // }, [setMortgageModal]);
   let navigate = useNavigate();
 
   const buyDirect = async (e) => {
@@ -180,7 +190,7 @@ const PropertyCard = ({ data }) => {
               loading="lazy"
               width="370"
               height="266"
-              alt="Duplex de Villa."
+              alt="Property Snapshot"
               style={{ cursor: "pointer" }}
               onClick={() => navigate("/property-details", { state: { data } })}
             />
@@ -309,26 +319,38 @@ const PropertyCard = ({ data }) => {
                 className="flex flex-wrap items-center pr-[25px] sm:pr-[5px] md:pr-[25px] border-r border-[#E0DEDE]"
               >
                 <PermIdentityIcon />
-                {data.creator.toString()[0]}
-                {data.creator.toString()[1]}
-                {data.creator.toString()[2]}
-                {data.creator.toString()[3]}
-                {data.creator.toString()[4]}
-                {data.creator.toString()[5]}.....
-                {data.creator.toString().slice(-4)}
+                {data.creator.length > 0 ? (
+                  <>
+                    {data.creator.toString()[0]}
+                    {data.creator.toString()[1]}
+                    {data.creator.toString()[2]}
+                    {data.creator.toString()[3]}
+                    {data.creator.toString()[4]}
+                    {data.creator.toString()[5]}.....
+                    {data.creator.toString().slice(-4)}
+                  </>
+                ) : (
+                  <span>No Data</span>
+                )}
               </li>
               <li
                 style={{ fontSize: "16px", margin: "0 10px" }}
                 className="flex flex-wrap items-center pr-[25px] sm:pr-[10px] md:pr-[25px] border-r border-[#E0DEDE]"
               >
                 <HomeIcon />
-                {data.nftContract.toString()[0]}
-                {data.nftContract.toString()[1]}
-                {data.nftContract.toString()[2]}
-                {data.nftContract.toString()[3]}
-                {data.nftContract[4]}
-                {data.nftContract[5]}.....
-                {data.nftContract.slice(-4)}
+                {data.nftContract.length > 0 ? (
+                  <>
+                    {data.nftContract.toString()[0]}
+                    {data.nftContract.toString()[1]}
+                    {data.nftContract.toString()[2]}
+                    {data.nftContract.toString()[3]}
+                    {data.nftContract[4]}
+                    {data.nftContract[5]}.....
+                    {data.nftContract.slice(-4)}
+                  </>
+                ) : (
+                  <span>No Data</span>
+                )}
               </li>
               <li className="flex flex-wrap items-center">
                 [{data.coordinateX}]{"\u00A0"}:{"\u00A0"}[{data.coordinateY}]

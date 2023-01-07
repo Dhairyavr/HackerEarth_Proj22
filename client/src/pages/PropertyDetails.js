@@ -1,10 +1,11 @@
 import { Button } from "@mui/material";
 import React, { useState } from "react";
 
-import { useLocation,useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 const PropertyDetails = () => {
-  let navigate=useNavigate();
+  let navigate = useNavigate();
   let location = useLocation();
+  // eslint-disable-next-line
   const [data, setData] = useState(location.state.data);
   return (
     <div className="font-karla text-body text-tiny">
@@ -68,7 +69,7 @@ const PropertyDetails = () => {
                   className="w-auto h-auto"
                   loading="lazy"
                   style={{ width: "100%" }}
-                  alt="Elite Garden Resedence."
+                  alt="Property Snapshot"
                   height="465"
                 />
                 <div className="mt-[45px] mb-[35px]">
@@ -115,25 +116,13 @@ const PropertyDetails = () => {
                 >
                   Video Sample<span className="text-secondary">.</span>
                 </h5>
-
-                <Button onClick={()=>navigate('/video',{state:{videoURL:data.video}})}>Check Video</Button>
-                {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px]">
-                  <div className="text-center">
-                    <img
-                      src="assets/images/floor-plan/floor1.png"
-                      alt="Floor Plan"
-                    />
-                    <p>Ground floor</p>
-                  </div>
-
-                  <div className="text-center">
-                    <img
-                      src="assets/images/floor-plan/floor3.png"
-                      alt="Floor Plan"
-                    />
-                    <p>1st Floor</p>
-                  </div>
-                </div> */}
+                <Button
+                  onClick={() =>
+                    navigate("/video", { state: { videoURL: data.video } })
+                  }
+                >
+                  Check Video
+                </Button>
                 <div className="grid grid-cols-12 mt-[10px]">
                   <div className="col-span-12">
                     <h2
