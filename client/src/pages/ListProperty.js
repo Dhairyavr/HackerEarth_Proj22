@@ -57,7 +57,8 @@ const ListProperty = () => {
     init();
 
     if (isExisting) {
-      console.log(typeof data.price, data.price);
+      console.log(typeof data.price, data.price, data);
+      setImage(data.logo);
       setMetaverseName(data.metaverseName);
       setPropertyTitle(data.name);
       setPropertyPrice((parseInt(data.price) / Math.pow(10, 18)).toString());
@@ -129,14 +130,15 @@ const ListProperty = () => {
       console.log(res);
       console.log(b);
       console.log(ab);
-
-      const imageblob = new Blob([ab], { type: "image/jpg" });
-      // Upload image to IPFS
-      const imageUploadResponse = await uploadFileToIPFS(imageblob);
-      console.log({ imageUploadResponse });
-      const imageIPFS = imageUploadResponse["value"]["cid"];
-      const imageLink = `https://alchemy.mypinata.cloud/ipfs/${imageIPFS}/`;
-
+      let imageLink;
+      if (typeof image !== "string") {
+        const imageblob = new Blob([ab], { type: "image/jpg" });
+        // Upload image to IPFS
+        const imageUploadResponse = await uploadFileToIPFS(imageblob);
+        console.log({ imageUploadResponse });
+        const imageIPFS = imageUploadResponse["value"]["cid"];
+        imageLink = `https://alchemy.mypinata.cloud/ipfs/${imageIPFS}/`;
+      }
       //upload video to ipfs
       let videoLink;
       if (videoBlob) {
