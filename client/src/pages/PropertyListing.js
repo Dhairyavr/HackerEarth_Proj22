@@ -159,31 +159,25 @@ const PropertyListing = () => {
     let droppedProperties;
     let prevDropClaimStatus;
     try {
-      prevDropClaimStatus = await morterContract.getPastEvents('dropCollected', {
-        filter: { owner: accounts[0] },
-        fromBlock: 0,
-        toBlock: 'latest'
-    });
-
-      // prevDropClaimStatus = await morterContract.getPastEvents(
-      //   "dropCollected",
-      //   {
+      //   prevDropClaimStatus = await morterContract.getPastEvents('dropCollected', {
       //     filter: { owner: accounts[0] },
-      //   }
-      // );
-      let prevClaimDate = new Date(prevDropClaimStatus[prevDropClaimStatus.length-1].returnValues.time);
+      //     fromBlock: 0,
+      //     toBlock: 'latest'
+      // });
+
+      // let prevClaimDate = new Date(prevDropClaimStatus[prevDropClaimStatus.length-1].returnValues.time);
 
       //prevClaimDate.setDate(prevClaimDate.getDate() - 5);
-      let dayDiff = Math.round(
-        (curentDate.getTime() - prevClaimDate.getTime()) / timeDivision
-      );
-      if (dayDiff <= 0) {
-        console.log(dayDiff);
-        alert(
-          `Only one drop property can be claimed in a day ${prevClaimDate}`
-        );
-        return;
-      }
+      // let dayDiff = Math.round(
+      //   (curentDate.getTime() - prevClaimDate.getTime()) / timeDivision
+      // );
+      // if (dayDiff <= 0) {
+      //   console.log(dayDiff);
+      //   alert(
+      //     `Only one drop property can be claimed in a day ${prevClaimDate}`
+      //   );
+      //   return;
+      // }
       droppedProperties = await morterContract.methods
         .getAllDroppedProperties()
         .call();
